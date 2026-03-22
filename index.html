@@ -22,23 +22,27 @@
         .btn-red { background-color: #dc3545; }
         .cart { border: 1px dashed #aaa; padding: 10px; min-height: 80px; margin-bottom: 15px; background-color: #fff; }
         h3 { text-align: center; color: #333; }
-        #reader { display: none; } 
-        #scanStatus { text-align: center; font-weight: bold; color: #007bff; display: none; margin-bottom: 10px;}
+        
         .navbar { position: fixed; bottom: 0; width: 100%; display: flex; background: #fff; box-shadow: 0 -2px 5px rgba(0,0,0,0.1); z-index: 1000;}
         .nav-item { flex: 1; text-align: center; padding: 15px 0; font-size: 14px; color: #555; cursor: pointer; border-top: 3px solid transparent; }
         .nav-item.active { color: #007bff; border-top: 3px solid #007bff; font-weight: bold; }
         .section { display: none; }
         .section.active { display: block; }
+        
         .tabel-rekap { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
         .tabel-rekap th { background: #007bff; color: white; padding: 8px; text-align: left; }
         .tabel-rekap td { padding: 8px; border-bottom: 1px solid #ccc; }
         .tabel-rekap tr:nth-child(even) { background-color: #f9f9f9; }
+        
+        /* POP-UP SCANNER LIVE */
+        #scannerModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; }
+        #reader { width: 100%; max-width: 400px; background: #000; }
+        
         #strukModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; }
         #strukContent { background: #fff; width: 90%; max-width: 350px; padding: 20px; border-radius: 8px; font-family: 'Courier New', Courier, monospace; font-size: 14px; color: #000; max-height: 90vh; overflow-y: auto;}
         .struk-header { text-align: center; font-weight: bold; font-size: 18px; margin-bottom: 5px; }
         .struk-garis { border-bottom: 1px dashed #000; margin: 10px 0; }
         .struk-item { display: flex; justify-content: space-between; margin-bottom: 5px; }
-        .struk-keterangan { font-size: 11px; font-style: italic; color: #555; margin-top: -3px; margin-bottom: 5px; display: block; }
         .struk-total { text-align: right; font-weight: bold; font-size: 16px; margin-top: 10px; }
         @media print { body * { visibility: hidden; } #strukContent, #strukContent * { visibility: visible; } #strukContent { position: absolute; left: 0; top: 0; width: 100%; padding: 0; box-shadow: none; border: none; } .no-print { display: none !important; } }
     </style>
@@ -48,26 +52,32 @@
 <div class="header">Kasir Pro v3 (PWA)</div>
 <div id="statusOffline">⚠️ MODE OFFLINE - <span id="jmlAntrean">0</span> Transaksi Tertunda</div>
 
-<div class="container">
+<div id="scannerModal">
+    <h3 style="color:white; margin-bottom:10px;">Arahkan ke Barcode</h3>
     <div id="reader"></div>
-    <input type="file" id="inputKameraBarcode" accept="image/*" capture="environment" style="display:none" onchange="prosesFotoBarcode(this)">
-    <p id="scanStatus">Membaca barcode dari foto...</p>
+    <button class="btn-red" style="width: 80%; max-width: 300px; margin-top: 20px;" onclick="tutupScanner()">❌ Batal Scan</button>
+</div>
 
+<div class="container">
     <div id="sec-dashboard" class="section active">
-        <h3>Dashboard Keuangan</h3>
+        <h3>Dashboard Keuangan & Stok</h3>
         <div class="cart">
-            <p>Data Gudang Lokal: <strong id="jumlahKatalog">0</strong> Barang</p>
-            <hr style="border:0; border-top:1px dashed #ccc; margin:10px 0;">
             <h4 style="margin: 0; color: #333;">Rekap Penjualan</h4>
             <div id="wadahRekap">Memuat laporan cuan... ⏳</div>
             <h3 style="margin-top:15px; color:#28a745; text-align:center;" id="grandTotalLaba">Total Laba:<br>Rp 0</h3>
+            
+            <hr style="border:0; border-top:1px dashed #ccc; margin:15px 0;">
+            
+            <h4 style="margin: 0; color: #333;">Sisa Stok Gudang</h4>
+            <p style="font-size:11px; color:#666; margin-top:2px;">*Data lokal: <strong id="jumlahKatalog">0</strong> Barang</p>
+            <div id="wadahStok">Memuat stok... ⏳</div>
         </div>
         <button class="btn-blue" id="btnRefresh" onclick="refreshSemua()">🔄 Sinkron Data Online</button>
     </div>
 
     <div id="sec-kasir" class="section">
         <input type="text" id="barcode" placeholder="[OTG] Tembak Barcode Di Sini..." autofocus>
-        <button id="btnScanKasir" class="btn-orange" onclick="bukaKamera('kasir')">📸 Atau Jepret Kamera</button>
+        <button class="btn-orange" onclick="bukaScannerLive('kasir')">📷 Scan Barcode Kamera</button>
         <div style="display:flex; gap:10px;">
             <input type="text" id="namaBarang" placeholder="Nama Barang" readonly style="flex:2;">
             <input type="text" id="hargaBarang" placeholder="Harga" readonly style="flex:1.5;">
@@ -82,7 +92,7 @@
     </div>
 
     <div id="sec-gudang" class="section">
-        <button id="btnScanStok" class="btn-orange" onclick="bukaKamera('stok')">📸 Jepret Barcode Gudang</button>
+        <button class="btn-orange" onclick="bukaScannerLive('stok')">📷 Scan Barcode Gudang</button>
         <input type="text" id="barcodeStok" placeholder="Barcode Barang" onchange="cariDataGudang(this.value)">
         <input type="text" id="namaStok" placeholder="Nama Barang">
         <select id="kategoriStok">
@@ -122,7 +132,7 @@
 </div>
 
 <script>
-    // URL SAKTI DARI GOOGLE APPS SCRIPT
+    // URL SAKTI DARI GOOGLE APPS SCRIPT LU (Ga perlu diganti, udah pas)
     const API_URL = "https://script.google.com/macros/s/AKfycbzjKrcSVYn7Jk2Z-Uij-hIUmmIUqC2bfE9ohM552gq4aK9Ss-u-PEhFhCh2VGWncrd59w/exec";
     
     let keranjang = [];
@@ -130,8 +140,8 @@
     let antreanTrx = JSON.parse(localStorage.getItem('antreanTrx')) || [];
     let targetScan = '';
     let teksStrukOnline = '';
+    let html5QrcodeScanner = null;
 
-    // Pendaftaran Service Worker buat Offline
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js').then(() => console.log('PWA Siap!')).catch(err => console.log(err));
     }
@@ -139,10 +149,9 @@
     window.onload = function() { 
         updateStatusSinyal(); 
         refreshSemua(); 
-        document.getElementById('jumlahKatalog').innerText = katalogOnline.length;
+        renderStokGudang();
     };
 
-    // Deteksi Sinyal
     window.addEventListener('online',  updateStatusSinyal);
     window.addEventListener('offline', updateStatusSinyal);
 
@@ -154,7 +163,7 @@
             txtAntrean.innerText = antreanTrx.length;
         } else {
             banner.style.display = 'none';
-            if (antreanTrx.length > 0) syncDataTertunda(); // Kalo nyala internet langsung kirim utang trx
+            if (antreanTrx.length > 0) syncDataTertunda(); 
         }
     }
 
@@ -164,15 +173,34 @@
         document.getElementById(tabId).classList.add('active');
         element.classList.add('active');
         if(tabId === 'sec-kasir') setTimeout(() => document.getElementById('barcode').focus(), 100);
-        else if(tabId === 'sec-dashboard') refreshSemua(); 
+        else if(tabId === 'sec-dashboard') { refreshSemua(); renderStokGudang(); }
     }
 
     function refreshSemua() {
         if(navigator.onLine) { refreshKatalog(); tarikLaporanCuan(); }
-        else { document.getElementById('wadahRekap').innerHTML = "<span style='color:red'>Mode Offline: Laporan tidak bisa ditarik.</span>"; }
+        else { document.getElementById('wadahRekap').innerHTML = "<span style='color:red'>Mode Offline: Laporan tidak bisa ditarik dari server.</span>"; }
     }
 
-    // --- API FETCH PENGGANTI GOOGLE.SCRIPT.RUN ---
+    // --- FITUR BARU: NAMPILIN STOK DI DASHBOARD ---
+    function renderStokGudang() {
+        document.getElementById('jumlahKatalog').innerText = katalogOnline.length;
+        let html = '<table class="tabel-rekap"><tr><th>Barang</th><th>Kategori</th><th>Stok</th></tr>';
+        if(katalogOnline.length === 0) {
+            html += '<tr><td colspan="3" style="text-align:center;">Data kosong</td></tr>';
+        } else {
+            // Urutin berdasarkan stok paling sedikit biar ketauan yang mau abis
+            let katalogUrut = [...katalogOnline].sort((a, b) => parseInt(a.sisaStok) - parseInt(b.sisaStok));
+            katalogUrut.forEach(b => {
+                let sisa = parseInt(b.sisaStok);
+                // Kalau stok 5 atau ke bawah, tulisan jadi merah
+                let stylePeringatan = sisa <= 5 ? 'color:red; font-weight:bold;' : 'color:green; font-weight:bold;';
+                html += `<tr><td>${b.namaBarang}</td><td>${b.kategori}</td><td style="${stylePeringatan}">${sisa}</td></tr>`;
+            });
+        }
+        html += '</table>';
+        document.getElementById('wadahStok').innerHTML = html;
+    }
+
     function refreshKatalog() {
         let btn = document.getElementById('btnRefresh');
         if(btn) btn.innerText = "Sinking...";
@@ -181,8 +209,8 @@
             .then(res => res.json())
             .then(data => {
                 katalogOnline = data;
-                localStorage.setItem('katalogLokal', JSON.stringify(data)); // Simpan di memori HP
-                document.getElementById('jumlahKatalog').innerText = data.length;
+                localStorage.setItem('katalogLokal', JSON.stringify(data)); 
+                renderStokGudang(); // Update tabel stok abis narik data
                 if(btn) btn.innerText = "🔄 Sinkron Data Online";
             }).catch(err => {
                 if(btn) btn.innerText = "🔄 Sinkron Data Online";
@@ -218,7 +246,7 @@
             body: JSON.stringify({ action: 'transaksi', data: antreanTrx })
         }).then(res => res.json()).then(res => {
             if(res.status === "success") {
-                antreanTrx = []; // Bersihin utang
+                antreanTrx = []; 
                 localStorage.setItem('antreanTrx', JSON.stringify(antreanTrx));
                 alert("Sinyal kembali! Semua transaksi offline berhasil dikirim ke Sheets.");
                 updateStatusSinyal();
@@ -226,7 +254,52 @@
         });
     }
 
-    // --- LOGIKA KASIR LOKAL ---
+    // --- FITUR BARU: LIVE SCANNER CAMERA ---
+    function bukaScannerLive(target) {
+        targetScan = target;
+        document.getElementById('scannerModal').style.display = 'flex';
+        
+        html5QrcodeScanner = new Html5Qrcode("reader");
+        html5QrcodeScanner.start(
+            { facingMode: "environment" }, // Kamera belakang
+            { fps: 10, qrbox: { width: 250, height: 250 } }, // Seting kotak scan
+            (decodedText) => {
+                // Berhasil nyecan!
+                tutupScanner();
+                if (targetScan === 'stok') {
+                    document.getElementById('barcodeStok').value = decodedText;
+                    cariDataGudang(decodedText);
+                } else if (targetScan === 'kasir') {
+                    document.getElementById('barcode').value = decodedText;
+                    let barang = katalogOnline.find(b => b.barcode === decodedText);
+                    if(barang) { 
+                        document.getElementById('namaBarang').value = barang.namaBarang; 
+                        document.getElementById('hargaBarang').value = barang.hargaSatuan; 
+                    } else { 
+                        alert("Barang belum terdaftar di Gudang!"); 
+                        document.getElementById('barcode').value = '';
+                    }
+                }
+            },
+            (errorMessage) => {
+                // Abaikan error pas lagi nyari/fokus
+            }
+        ).catch(err => {
+            alert("Gagal akses kamera bro. Pastiin browser lu ngasih izin kamera ya.");
+            tutupScanner();
+        });
+    }
+
+    function tutupScanner() {
+        if (html5QrcodeScanner) {
+            html5QrcodeScanner.stop().then(() => {
+                document.getElementById('scannerModal').style.display = 'none';
+            }).catch(err => console.log(err));
+        } else {
+            document.getElementById('scannerModal').style.display = 'none';
+        }
+    }
+
     document.getElementById('barcode').addEventListener('input', function() {
         let barang = katalogOnline.find(b => b.barcode === this.value);
         if(barang) { document.getElementById('namaBarang').value = barang.namaBarang; document.getElementById('hargaBarang').value = barang.hargaSatuan; } 
@@ -241,21 +314,6 @@
             else { alert("Barang belum terdaftar!"); this.value = ''; document.getElementById('namaBarang').value = ''; document.getElementById('hargaBarang').value = '';}
         }
     });
-
-    function bukaKamera(target) { targetScan = target; document.getElementById('inputKameraBarcode').click(); }
-    function prosesFotoBarcode(input) {
-        if (!input.files || input.files.length === 0) return;
-        const html5QrCode = new Html5Qrcode("reader");
-        html5QrCode.scanFile(input.files[0], true).then(decodedText => {
-            if (targetScan === 'stok') { document.getElementById('barcodeStok').value = decodedText; cariDataGudang(decodedText); } 
-            else if (targetScan === 'kasir') {
-                document.getElementById('barcode').value = decodedText;
-                let barang = katalogOnline.find(b => b.barcode === decodedText);
-                if(barang) { document.getElementById('namaBarang').value = barang.namaBarang; document.getElementById('hargaBarang').value = barang.hargaSatuan; } 
-            }
-            input.value = ""; 
-        }).catch(err => input.value = "");
-    }
 
     function cariDataGudang(kode) {
         let barang = katalogOnline.find(b => b.barcode === kode);
@@ -328,7 +386,16 @@
         let idTrx = "TRX-" + Math.floor(Date.now() / 1000); let tgl = new Date().toLocaleString('id-ID');
         let dataKirim = keranjang.map(item => ({ id: idTrx, tanggal: tgl, ...item }));
 
-        // LOGIKA PENYIMPANAN OFFLINE / ONLINE
+        // Ngurangin stok LOKAL sementara biar tabel Dashboard langsung update tanpa nunggu refresh online
+        dataKirim.forEach(trx => {
+            let brgIndex = katalogOnline.findIndex(b => b.barcode === trx.barcode);
+            if(brgIndex !== -1) {
+                katalogOnline[brgIndex].sisaStok -= trx.jumlah;
+            }
+        });
+        localStorage.setItem('katalogLokal', JSON.stringify(katalogOnline));
+        renderStokGudang(); // Segarkan tampilan tabel stok
+
         if(!navigator.onLine) {
             antreanTrx.push(...dataKirim);
             localStorage.setItem('antreanTrx', JSON.stringify(antreanTrx));
@@ -344,7 +411,6 @@
         }).then(res => res.json()).then(res => {
             tampilkanStruk(tgl); btn.innerText = "Bayar & Simpan"; refreshSemua();
         }).catch(err => {
-            // Kalau fetch error (tiba-tiba ngelag), simpan offline
             antreanTrx.push(...dataKirim); localStorage.setItem('antreanTrx', JSON.stringify(antreanTrx));
             tampilkanStruk(tgl); updateStatusSinyal(); btn.innerText = "Bayar & Simpan";
         });
