@@ -11,6 +11,7 @@
         body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f9; padding-bottom: 70px; }
         .header { background: #333; color: white; padding: 15px; text-align: center; font-size: 20px; font-weight: bold; }
         #statusOffline { background: #dc3545; color: white; text-align: center; padding: 5px; font-size: 12px; display: none; font-weight:bold; }
+        #peringatanApi { background: #ff9800; color: white; text-align: center; padding: 10px; font-size: 14px; font-weight:bold; display: none; }
         .container { padding: 20px; max-width: 500px; margin: auto; }
         input, select, button { width: 100%; padding: 12px; margin: 8px 0; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; font-size: 14px; }
         input[readonly] { background-color: #e9ecef; }
@@ -24,7 +25,7 @@
         h3 { text-align: center; color: #333; }
         
         .navbar { position: fixed; bottom: 0; width: 100%; display: flex; background: #fff; box-shadow: 0 -2px 5px rgba(0,0,0,0.1); z-index: 1000;}
-        .nav-item { flex: 1; text-align: center; padding: 15px 0; font-size: 14px; color: #555; cursor: pointer; border-top: 3px solid transparent; }
+        .nav-item { flex: 1; text-align: center; padding: 12px 0; font-size: 13px; color: #555; cursor: pointer; border-top: 3px solid transparent; }
         .nav-item.active { color: #007bff; border-top: 3px solid #007bff; font-weight: bold; }
         .section { display: none; }
         .section.active { display: block; }
@@ -51,6 +52,7 @@
 
 <div class="header">Kasir Pro v3 (PWA)</div>
 <div id="statusOffline">⚠️ MODE OFFLINE - <span id="jmlAntrean">0</span> Transaksi Tertunda</div>
+<div id="peringatanApi">⚠️ API Belum Diatur! Masuk ke menu Setting.</div>
 
 <div id="scannerModal">
     <h3 style="color:white; margin-bottom:10px;">Arahkan ke Barcode</h3>
@@ -107,11 +109,36 @@
         <div style="display:flex; gap:10px;"><input type="number" id="syaratGrosir" placeholder="Min. Beli Grosir"><input type="text" id="promo" placeholder="Promo (B2G1)"></div>
         <button class="btn-green" id="btnSimpanStok" onclick="kirimStokBaru()">Simpan/Update Barang (Online)</button>
     </div>
+
+    <div id="sec-pengaturan" class="section">
+        <h3>⚙️ Pengaturan Toko</h3>
+        
+        <div class="cart">
+            <h4 style="margin-top:0;">Profil Toko</h4>
+            <p style="font-size:12px; color:#555;">Atur nama toko yang akan tampil di struk pelanggan.</p>
+            <input type="text" id="inputNamaToko" placeholder="Masukkan Nama Toko...">
+            <button class="btn-blue" onclick="simpanNamaToko()">💾 Simpan Nama Toko</button>
+        </div>
+
+        <div class="cart">
+            <h4 style="margin-top:0;">Koneksi Database</h4>
+            <p style="font-size:12px; color:#555;">Masukkan URL Web App dari Google Apps Script untuk menghubungkan aplikasi ini ke gudang Anda.</p>
+            <input type="text" id="inputApiUrl" placeholder="Paste URL API di sini...">
+            <button class="btn-green" onclick="simpanApiUrl()">🔗 Simpan & Hubungkan</button>
+            <div id="statusApiText" style="margin-top:10px; text-align:center; font-weight:bold; font-size:14px;"></div>
+        </div>
+        
+        <div class="cart" style="border-color:#dc3545;">
+            <h4 style="margin-top:0; color:#dc3545;">Zona Berbahaya</h4>
+            <p style="font-size:12px; color:#555;">Hapus semua data lokal jika terjadi error atau ingin ganti toko.</p>
+            <button class="btn-red" onclick="resetAplikasi()">🗑️ Reset Aplikasi</button>
+        </div>
+    </div>
 </div>
 
 <div id="strukModal">
     <div id="strukContent">
-        <div class="struk-header">TOKO KITA</div>
+        <div class="struk-header" id="strukNamaTokoTampil">TOKO KITA</div>
         <div id="strukTanggal" style="text-align:center; font-size:12px;"></div>
         <div class="struk-garis"></div>
         <div id="strukItems"></div>
@@ -119,21 +146,23 @@
         <div class="struk-total" id="strukTotal"></div>
         <div class="no-print" style="margin-top:20px; display:flex; flex-direction:column; gap:10px;">
             <button class="btn-blue" onclick="window.print()">🖨️ Cetak</button>
-            <button class="btn-green" onclick="bagikanStruk()">📱 Bagikan</button>
+            <button class="btn-green" onclick="bagikanStruk()">📱 Bagikan WA</button>
             <button class="btn-red" onclick="document.getElementById('strukModal').style.display = 'none'">❌ Tutup</button>
         </div>
     </div>
 </div>
 
 <div class="navbar">
-    <div class="nav-item active" onclick="switchTab('sec-dashboard', this)">Dashboard</div>
+    <div class="nav-item active" onclick="switchTab('sec-dashboard', this)">Dash</div>
     <div class="nav-item" onclick="switchTab('sec-kasir', this)">Kasir</div>
     <div class="nav-item" onclick="switchTab('sec-gudang', this)">Gudang</div>
+    <div class="nav-item" onclick="switchTab('sec-pengaturan', this)">Setting</div>
 </div>
 
 <script>
-    // URL SAKTI DARI GOOGLE APPS SCRIPT LU (Ga perlu diganti, udah pas)
-    const API_URL = "https://script.google.com/macros/s/AKfycbzjKrcSVYn7Jk2Z-Uij-hIUmmIUqC2bfE9ohM552gq4aK9Ss-u-PEhFhCh2VGWncrd59w/exec";
+    // --- VARIABEL DINAMIS ---
+    let API_URL = localStorage.getItem('KASIR_API_URL') || "";
+    let NAMA_TOKO = localStorage.getItem('KASIR_NAMA_TOKO') || "TOKO KITA";
     
     let keranjang = [];
     let katalogOnline = JSON.parse(localStorage.getItem('katalogLokal')) || []; 
@@ -147,13 +176,60 @@
     }
 
     window.onload = function() { 
+        document.getElementById('inputApiUrl').value = API_URL;
+        document.getElementById('inputNamaToko').value = NAMA_TOKO; // Munculin nama toko di inputan
+        
+        cekStatusApi();
         updateStatusSinyal(); 
-        refreshSemua(); 
+        if(API_URL) {
+            refreshSemua(); 
+        }
         renderStokGudang();
     };
 
     window.addEventListener('online',  updateStatusSinyal);
     window.addEventListener('offline', updateStatusSinyal);
+
+    // --- FUNGSI SIMPAN NAMA TOKO BARU ---
+    function simpanNamaToko() {
+        let namaBaru = document.getElementById('inputNamaToko').value.trim();
+        if(!namaBaru) return alert("Nama toko ga boleh kosong bro!");
+        
+        localStorage.setItem('KASIR_NAMA_TOKO', namaBaru);
+        NAMA_TOKO = namaBaru;
+        alert("Sip! Nama toko berhasil diupdate jadi: " + NAMA_TOKO);
+    }
+
+    function cekStatusApi() {
+        let bannerApi = document.getElementById('peringatanApi');
+        let statusText = document.getElementById('statusApiText');
+        if(!API_URL) {
+            bannerApi.style.display = 'block';
+            statusText.innerHTML = "<span style='color:red;'>Terputus (API Kosong)</span>";
+        } else {
+            bannerApi.style.display = 'none';
+            statusText.innerHTML = "<span style='color:green;'>Tersambung ✓</span>";
+        }
+    }
+
+    function simpanApiUrl() {
+        let urlBaru = document.getElementById('inputApiUrl').value.trim();
+        if(!urlBaru) return alert("Link API tidak boleh kosong!");
+        if(!urlBaru.includes("script.google.com/macros/s/")) return alert("Link API tidak valid. Pastikan dari Google Apps Script.");
+        
+        localStorage.setItem('KASIR_API_URL', urlBaru);
+        API_URL = urlBaru;
+        cekStatusApi();
+        alert("Berhasil disimpan! Aplikasi akan mencoba sinkronisasi...");
+        refreshSemua();
+    }
+
+    function resetAplikasi() {
+        if(confirm("YAKIN MAU RESET? Semua data lokal dan antrean transaksi yang belum terkirim akan HILANG.")) {
+            localStorage.clear();
+            location.reload();
+        }
+    }
 
     function updateStatusSinyal() {
         let banner = document.getElementById('statusOffline');
@@ -163,7 +239,7 @@
             txtAntrean.innerText = antreanTrx.length;
         } else {
             banner.style.display = 'none';
-            if (antreanTrx.length > 0) syncDataTertunda(); 
+            if (antreanTrx.length > 0 && API_URL) syncDataTertunda(); 
         }
     }
 
@@ -173,26 +249,24 @@
         document.getElementById(tabId).classList.add('active');
         element.classList.add('active');
         if(tabId === 'sec-kasir') setTimeout(() => document.getElementById('barcode').focus(), 100);
-        else if(tabId === 'sec-dashboard') { refreshSemua(); renderStokGudang(); }
+        else if(tabId === 'sec-dashboard') { if(API_URL) refreshSemua(); renderStokGudang(); }
     }
 
     function refreshSemua() {
+        if(!API_URL) return;
         if(navigator.onLine) { refreshKatalog(); tarikLaporanCuan(); }
-        else { document.getElementById('wadahRekap').innerHTML = "<span style='color:red'>Mode Offline: Laporan tidak bisa ditarik dari server.</span>"; }
+        else { document.getElementById('wadahRekap').innerHTML = "<span style='color:red'>Mode Offline.</span>"; }
     }
 
-    // --- FITUR BARU: NAMPILIN STOK DI DASHBOARD ---
     function renderStokGudang() {
         document.getElementById('jumlahKatalog').innerText = katalogOnline.length;
         let html = '<table class="tabel-rekap"><tr><th>Barang</th><th>Kategori</th><th>Stok</th></tr>';
         if(katalogOnline.length === 0) {
             html += '<tr><td colspan="3" style="text-align:center;">Data kosong</td></tr>';
         } else {
-            // Urutin berdasarkan stok paling sedikit biar ketauan yang mau abis
             let katalogUrut = [...katalogOnline].sort((a, b) => parseInt(a.sisaStok) - parseInt(b.sisaStok));
             katalogUrut.forEach(b => {
                 let sisa = parseInt(b.sisaStok);
-                // Kalau stok 5 atau ke bawah, tulisan jadi merah
                 let stylePeringatan = sisa <= 5 ? 'color:red; font-weight:bold;' : 'color:green; font-weight:bold;';
                 html += `<tr><td>${b.namaBarang}</td><td>${b.kategori}</td><td style="${stylePeringatan}">${sisa}</td></tr>`;
             });
@@ -202,6 +276,7 @@
     }
 
     function refreshKatalog() {
+        if(!API_URL) return;
         let btn = document.getElementById('btnRefresh');
         if(btn) btn.innerText = "Sinking...";
         
@@ -210,7 +285,7 @@
             .then(data => {
                 katalogOnline = data;
                 localStorage.setItem('katalogLokal', JSON.stringify(data)); 
-                renderStokGudang(); // Update tabel stok abis narik data
+                renderStokGudang(); 
                 if(btn) btn.innerText = "🔄 Sinkron Data Online";
             }).catch(err => {
                 if(btn) btn.innerText = "🔄 Sinkron Data Online";
@@ -218,6 +293,7 @@
     }
 
     function tarikLaporanCuan() {
+        if(!API_URL) return;
         document.getElementById('wadahRekap').innerHTML = "Menghitung...";
         fetch(API_URL + "?action=laporan")
             .then(res => res.json())
@@ -240,7 +316,7 @@
     }
 
     function syncDataTertunda() {
-        if(antreanTrx.length === 0) return;
+        if(antreanTrx.length === 0 || !API_URL) return;
         fetch(API_URL, {
             method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ action: 'transaksi', data: antreanTrx })
@@ -248,56 +324,35 @@
             if(res.status === "success") {
                 antreanTrx = []; 
                 localStorage.setItem('antreanTrx', JSON.stringify(antreanTrx));
-                alert("Sinyal kembali! Semua transaksi offline berhasil dikirim ke Sheets.");
+                alert("Sinyal kembali! Semua transaksi offline berhasil dikirim.");
                 updateStatusSinyal();
             }
         });
     }
 
-    // --- FITUR BARU: LIVE SCANNER CAMERA ---
     function bukaScannerLive(target) {
         targetScan = target;
         document.getElementById('scannerModal').style.display = 'flex';
-        
         html5QrcodeScanner = new Html5Qrcode("reader");
         html5QrcodeScanner.start(
-            { facingMode: "environment" }, // Kamera belakang
-            { fps: 10, qrbox: { width: 250, height: 250 } }, // Seting kotak scan
+            { facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } },
             (decodedText) => {
-                // Berhasil nyecan!
                 tutupScanner();
-                if (targetScan === 'stok') {
-                    document.getElementById('barcodeStok').value = decodedText;
-                    cariDataGudang(decodedText);
-                } else if (targetScan === 'kasir') {
+                if (targetScan === 'stok') { document.getElementById('barcodeStok').value = decodedText; cariDataGudang(decodedText); } 
+                else if (targetScan === 'kasir') {
                     document.getElementById('barcode').value = decodedText;
                     let barang = katalogOnline.find(b => b.barcode === decodedText);
-                    if(barang) { 
-                        document.getElementById('namaBarang').value = barang.namaBarang; 
-                        document.getElementById('hargaBarang').value = barang.hargaSatuan; 
-                    } else { 
-                        alert("Barang belum terdaftar di Gudang!"); 
-                        document.getElementById('barcode').value = '';
-                    }
+                    if(barang) { document.getElementById('namaBarang').value = barang.namaBarang; document.getElementById('hargaBarang').value = barang.hargaSatuan; } 
+                    else { alert("Barang belum terdaftar!"); document.getElementById('barcode').value = ''; }
                 }
             },
-            (errorMessage) => {
-                // Abaikan error pas lagi nyari/fokus
-            }
-        ).catch(err => {
-            alert("Gagal akses kamera bro. Pastiin browser lu ngasih izin kamera ya.");
-            tutupScanner();
-        });
+            (errorMessage) => { }
+        ).catch(err => { alert("Gagal akses kamera."); tutupScanner(); });
     }
 
     function tutupScanner() {
-        if (html5QrcodeScanner) {
-            html5QrcodeScanner.stop().then(() => {
-                document.getElementById('scannerModal').style.display = 'none';
-            }).catch(err => console.log(err));
-        } else {
-            document.getElementById('scannerModal').style.display = 'none';
-        }
+        if (html5QrcodeScanner) { html5QrcodeScanner.stop().then(() => { document.getElementById('scannerModal').style.display = 'none'; }).catch(err => console.log(err)); } 
+        else { document.getElementById('scannerModal').style.display = 'none'; }
     }
 
     document.getElementById('barcode').addEventListener('input', function() {
@@ -326,7 +381,8 @@
     }
 
     function kirimStokBaru() {
-        if(!navigator.onLine) return alert("Gagal! Nambah/Update gudang harus pas online bro.");
+        if(!API_URL) return alert("Peringatan: API belum diatur!");
+        if(!navigator.onLine) return alert("Gagal! Update gudang harus online.");
         let dataStok = {
             barcode: document.getElementById('barcodeStok').value, namaBarang: document.getElementById('namaStok').value,
             kategori: document.getElementById('kategoriStok').value, sisaStok: document.getElementById('jumlahStok').value,
@@ -380,29 +436,23 @@
     }
 
     function bayarDanKirim() {
+        if(!API_URL) return alert("Peringatan: API Toko belum diatur di menu Setting!");
         if(keranjang.length === 0) return alert("Keranjang kosong!");
         let btn = document.getElementById('btnBayar'); btn.innerText = "Memproses...";
         
         let idTrx = "TRX-" + Math.floor(Date.now() / 1000); let tgl = new Date().toLocaleString('id-ID');
         let dataKirim = keranjang.map(item => ({ id: idTrx, tanggal: tgl, ...item }));
 
-        // Ngurangin stok LOKAL sementara biar tabel Dashboard langsung update tanpa nunggu refresh online
         dataKirim.forEach(trx => {
             let brgIndex = katalogOnline.findIndex(b => b.barcode === trx.barcode);
-            if(brgIndex !== -1) {
-                katalogOnline[brgIndex].sisaStok -= trx.jumlah;
-            }
+            if(brgIndex !== -1) { katalogOnline[brgIndex].sisaStok -= trx.jumlah; }
         });
         localStorage.setItem('katalogLokal', JSON.stringify(katalogOnline));
-        renderStokGudang(); // Segarkan tampilan tabel stok
+        renderStokGudang(); 
 
         if(!navigator.onLine) {
-            antreanTrx.push(...dataKirim);
-            localStorage.setItem('antreanTrx', JSON.stringify(antreanTrx));
-            tampilkanStruk(tgl);
-            updateStatusSinyal();
-            btn.innerText = "Bayar & Simpan";
-            return;
+            antreanTrx.push(...dataKirim); localStorage.setItem('antreanTrx', JSON.stringify(antreanTrx));
+            tampilkanStruk(tgl); updateStatusSinyal(); btn.innerText = "Bayar & Simpan"; return;
         }
 
         fetch(API_URL, {
@@ -418,11 +468,18 @@
 
     function tampilkanStruk(tgl) {
         let strukHtml = ''; let grandTotalStruk = 0;
-        teksStrukOnline = '*=== STRUK BELANJA ===*\nTanggal: ' + tgl + '\n\n';
+        
+        // PAKE NAMA TOKO DINAMIS BUAT DI WA
+        teksStrukOnline = `*=== STRUK BELANJA ===*\n*${NAMA_TOKO}*\nTanggal: ` + tgl + '\n\n';
+        
         keranjang.forEach(item => {
             strukHtml += `<div class="struk-item"><span>${item.namaBarang} (x${item.jumlah})</span><span>Rp ${item.totalHarga}</span></div>`;
             grandTotalStruk += item.totalHarga; teksStrukOnline += `${item.namaBarang} (x${item.jumlah}) : Rp ${item.totalHarga}\n`;
         });
+        
+        // UPDATE NAMA TOKO DI POP-UP STRUK HTML
+        document.getElementById('strukNamaTokoTampil').innerText = NAMA_TOKO;
+        
         document.getElementById('strukTanggal').innerText = tgl; document.getElementById('strukItems').innerHTML = strukHtml; document.getElementById('strukTotal').innerText = `TOTAL: Rp ${grandTotalStruk}`;
         teksStrukOnline += `\n*TOTAL: Rp ${grandTotalStruk}*\nTerima Kasih!`;
         document.getElementById('strukModal').style.display = 'flex';
