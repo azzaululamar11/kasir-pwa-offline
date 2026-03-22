@@ -3,98 +3,155 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kasir Pro Offline</title>
+    <title>OFFKASIR - Kasir Sakti Offline</title> 
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#007bff">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <meta name="theme-color" content="#1e3a8a">
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f9; padding-bottom: 70px; }
-        .header { background: #333; color: white; padding: 15px; text-align: center; font-size: 20px; font-weight: bold; }
-        #statusOffline { background: #dc3545; color: white; text-align: center; padding: 5px; font-size: 12px; display: none; font-weight:bold; }
-        #peringatanApi { background: #ff9800; color: white; text-align: center; padding: 10px; font-size: 14px; font-weight:bold; display: none; }
-        .container { padding: 20px; max-width: 500px; margin: auto; }
-        input, select, button { width: 100%; padding: 12px; margin: 8px 0; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; font-size: 14px; }
+        /* THEME BARU: MODERN & CLEAN */
+        :root {
+            --primary: #1e40af; /* Biru Royal Gelap biar mahal */
+            --bg-body: #f1f5f9; /* Abu super muda adem */
+            --bg-card: #ffffff;
+            --text-dark: #1f2937;
+            --text-muted: #6b7280;
+            --orange: #f59e0b; /* Kuning Emas buat Scan */
+            --green: #10b981; /* Hijau modern buat Bayar */
+            --red: #ef4444; /* Merah buat Batal */
+            --border: 8px; /* Sudut tumpul */
+        }
+
+        body { font-family: 'Poppins', sans-serif; margin: 0; padding: 0; background-color: var(--bg-body); padding-bottom: 75px; color: var(--text-dark); }
+        .header { background: var(--primary); color: white; padding: 18px; text-align: center; font-size: 20px; font-weight: 700; border-bottom-left-radius: 15px; border-bottom-right-radius: 15px; box-shadow: 0 3px 6px rgba(0,0,0,0.1); }
+        
+        #statusOffline, #peringatanApi { text-align: center; padding: 8px; font-size: 12px; font-weight:600; display: none; margin: 10px; border-radius: 5px;}
+        #statusOffline { background: var(--red); color: white; }
+        #peringatanApi { background: var(--orange); color: white; }
+        
+        .container { padding: 15px; max-width: 500px; margin: auto; }
+        input, select, button { width: 100%; padding: 14px; margin: 8px 0; box-sizing: border-box; border-radius: var(--border); border: 1px solid #e2e8f0; font-size: 14px; font-family: 'Poppins', sans-serif;}
         input[readonly] { background-color: #e9ecef; }
-        #barcode { border: 2px solid #007bff; background-color: #e6f2ff; font-weight: bold; font-size: 16px; }
-        button { border: none; cursor: pointer; font-weight: bold; font-size: 16px; color: white; }
-        .btn-green { background-color: #28a745; }
-        .btn-blue { background-color: #007bff; }
-        .btn-orange { background-color: #ff9800; margin-bottom: 10px; }
-        .btn-red { background-color: #dc3545; }
-        .cart { border: 1px dashed #aaa; padding: 10px; min-height: 80px; margin-bottom: 15px; background-color: #fff; }
-        h3 { text-align: center; color: #333; }
+        #barcode { border: 2px solid var(--primary); background-color: #e6f2ff; font-weight: 600; font-size: 16px; }
         
-        .navbar { position: fixed; bottom: 0; width: 100%; display: flex; background: #fff; box-shadow: 0 -2px 5px rgba(0,0,0,0.1); z-index: 1000;}
-        .nav-item { flex: 1; text-align: center; padding: 12px 0; font-size: 13px; color: #555; cursor: pointer; border-top: 3px solid transparent; }
-        .nav-item.active { color: #007bff; border-top: 3px solid #007bff; font-weight: bold; }
+        button { border: none; cursor: pointer; font-weight: 600; font-size: 15px; color: white; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        button:active { transform: scale(0.98); box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .btn-green { background-color: var(--green); }
+        .btn-blue { background-color: var(--primary); }
+        .btn-orange { background-color: var(--orange); margin-bottom: 10px; }
+        .btn-red { background-color: var(--red); }
+        
+        .cart { border: 1px dashed #e2e8f0; padding: 15px; min-height: 80px; margin-bottom: 15px; background-color: var(--bg-card); border-radius: var(--border); }
+        h3 { text-align: center; color: var(--text-dark); font-weight: 700; font-size: 18px; margin-top: 5px; }
+        h4 { margin: 10px 0 5px 0; color: var(--text-dark); font-weight: 600; font-size: 15px;}
+
+        /* KARTU DASHBOARD MEWAH */
+        .dash-cards-container { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .dash-card { background: var(--bg-card); padding: 15px; border-radius: var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.05); text-align: center; border-left: 4px solid var(--primary);}
+        .dash-card.laba { border-left-color: var(--green); }
+        .dash-card-title { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+        .dash-card-value { font-size: 18px; font-weight: 700; color: var(--text-dark); margin-top: 5px;}
+
+        .navbar { position: fixed; bottom: 0; width: 100%; display: flex; background: #fff; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 1000; border-top-left-radius: 15px; border-top-right-radius: 15px;}
+        .nav-item { flex: 1; text-align: center; padding: 15px 0; font-size: 12px; color: var(--text-muted); cursor: pointer; border-top: 3px solid transparent; display: flex; flex-direction: column; align-items: center;}
+        .nav-item.active { color: var(--primary); border-top: 3px solid var(--primary); font-weight: 700; }
+        
         .section { display: none; }
-        .section.active { display: block; }
+        .section.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         
-        .tabel-rekap { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
-        .tabel-rekap th { background: #007bff; color: white; padding: 8px; text-align: left; }
-        .tabel-rekap td { padding: 8px; border-bottom: 1px solid #ccc; }
-        .tabel-rekap tr:nth-child(even) { background-color: #f9f9f9; }
+        .tabel-rekap { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px; background: #fff; border-radius: var(--border); overflow: hidden;}
+        .tabel-rekap th { background: var(--primary); color: white; padding: 10px; text-align: left; }
+        .tabel-rekap td { padding: 10px; border-bottom: 1px solid #f1f5f9; }
+        .tabel-rekap tr:nth-child(even) { background-color: #f8fafc; }
         
-        /* POP-UP SCANNER LIVE */
+        /* SCANNER LOKAL UI */
         #scannerModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; }
-        #reader { width: 100%; max-width: 400px; background: #000; }
+        #reader { width: 100%; max-width: 400px; background: #000; border-radius: 15px; overflow: hidden; border: 3px solid #fff;}
         
-        #strukModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; }
-        #strukContent { background: #fff; width: 90%; max-width: 350px; padding: 20px; border-radius: 8px; font-family: 'Courier New', Courier, monospace; font-size: 14px; color: #000; max-height: 90vh; overflow-y: auto;}
-        .struk-header { text-align: center; font-weight: bold; font-size: 18px; margin-bottom: 5px; }
+        /* POP-UP STRUK ULTIMATE */
+        #strukModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; backdrop-filter: blur(2px); }
+        #strukContent { background: #fff; width: 90%; max-width: 350px; padding: 25px 20px; border-radius: 10px; font-family: 'Courier New', Courier, monospace; font-size: 13px; color: #000; max-height: 90vh; overflow-y: auto; box-shadow: 0 5px 15px rgba(0,0,0,0.2);}
+        .struk-header { text-align: center; font-weight: bold; font-size: 17px; margin-bottom: 2px; }
+        .struk-sub-header { text-align: center; font-size: 11px; color: #333; margin-bottom: 2px; }
         .struk-garis { border-bottom: 1px dashed #000; margin: 10px 0; }
-        .struk-item { display: flex; justify-content: space-between; margin-bottom: 5px; }
-        .struk-total { text-align: right; font-weight: bold; font-size: 16px; margin-top: 10px; }
+        .struk-item { display: flex; justify-content: space-between; margin-bottom: 5px; align-items: flex-start; }
+        .struk-item-info { flex: 1; margin-right: 10px; }
+        .struk-total { text-align: right; font-weight: bold; font-size: 16px; margin-top: 10px; display: flex; justify-content: flex-end; gap: 20px;}
+        .no-print { display: flex; flex-direction: column; gap: 8px; margin-top: 20px; }
+        
         @media print { body * { visibility: hidden; } #strukContent, #strukContent * { visibility: visible; } #strukContent { position: absolute; left: 0; top: 0; width: 100%; padding: 0; box-shadow: none; border: none; } .no-print { display: none !important; } }
     </style>
 </head>
 <body>
 
-<div class="header">Kasir Pro v3 (PWA)</div>
-<div id="statusOffline">⚠️ MODE OFFLINE - <span id="jmlAntrean">0</span> Transaksi Tertunda</div>
-<div id="peringatanApi">⚠️ API Belum Diatur! Masuk ke menu Setting.</div>
+<div class="header">OFFKASIR ⚡</div>
+<div id="statusOffline">⚠️ MODE OFFLINE - <span id="jmlAntrean">0</span> Trx Tertunda</div>
+<div id="peringatanApi">⚠️ Setup Koneksi dulu bro! Pindah ke menu Setting.</div>
 
 <div id="scannerModal">
-    <h3 style="color:white; margin-bottom:10px;">Arahkan ke Barcode</h3>
     <div id="reader"></div>
-    <button class="btn-red" style="width: 80%; max-width: 300px; margin-top: 20px;" onclick="tutupScanner()">❌ Batal Scan</button>
+    <button class="btn-red" style="width: 80%; max-width: 300px; margin-top: 20px;" onclick="tutupScanner()">❌ Tutup Kamera</button>
 </div>
 
 <div class="container">
     <div id="sec-dashboard" class="section active">
-        <h3>Dashboard Keuangan & Stok</h3>
-        <div class="cart">
-            <h4 style="margin: 0; color: #333;">Rekap Penjualan</h4>
-            <div id="wadahRekap">Memuat laporan cuan... ⏳</div>
-            <h3 style="margin-top:15px; color:#28a745; text-align:center;" id="grandTotalLaba">Total Laba:<br>Rp 0</h3>
-            
-            <hr style="border:0; border-top:1px dashed #ccc; margin:15px 0;">
-            
-            <h4 style="margin: 0; color: #333;">Sisa Stok Gudang</h4>
-            <p style="font-size:11px; color:#666; margin-top:2px;">*Data lokal: <strong id="jumlahKatalog">0</strong> Barang</p>
-            <div id="wadahStok">Memuat stok... ⏳</div>
+        <h3>Laporan Hari Ini</h3>
+        
+        <div class="dash-cards-container">
+            <div class="dash-card">
+                <div class="dash-card-title">Omset</div>
+                <div class="dash-card-value" id="valOmset">Rp 0</div>
+            </div>
+            <div class="dash-card laba">
+                <div class="dash-card-title">Cuan Bersih</div>
+                <div class="dash-card-value" style="color:var(--green)" id="valLaba">Rp 0</div>
+            </div>
         </div>
-        <button class="btn-blue" id="btnRefresh" onclick="refreshSemua()">🔄 Sinkron Data Online</button>
+        
+        <div class="cart">
+            <h4 style="margin: 0; text-align:center;">Rekap Penjualan per Kategori</h4>
+            <div id="wadahRekap">Memuat laporan...</div>
+            <hr style="border:0; border-top:1px dashed #e2e8f0; margin:15px 0;">
+            <h4 style="margin: 0; text-align:center;">Sisa Stok Gudang</h4>
+            <p style="font-size:11px; text-align:center; color:var(--text-muted); margin-top:2px;">Data lokal: <strong id="jumlahKatalog">0</strong> Barang</p>
+            <div id="wadahStok">Memuat stok...</div>
+        </div>
+        <button class="btn-blue" id="btnRefresh" onclick="refreshSemua()">🔄 Sinkron Data Gudang</button>
     </div>
 
     <div id="sec-kasir" class="section">
-        <input type="text" id="barcode" placeholder="[OTG] Tembak Barcode Di Sini..." autofocus>
-        <button class="btn-orange" onclick="bukaScannerLive('kasir')">📷 Scan Barcode Kamera</button>
+        <input type="text" id="barcode" placeholder="Scan Barcode / Ketik OTG..." autofocus>
+        <button class="btn-orange" onclick="bukaScannerLive('kasir')">📷 Buka Kamera Scanner</button>
         <div style="display:flex; gap:10px;">
             <input type="text" id="namaBarang" placeholder="Nama Barang" readonly style="flex:2;">
-            <input type="text" id="hargaBarang" placeholder="Harga" readonly style="flex:1.5;">
-            <input type="number" id="jumlah" placeholder="Jml" value="1" style="flex:1;">
+            <input type="text" id="hargaBarang" placeholder="Harga" readonly style="flex:1.2;">
+            <input type="number" id="jumlah" placeholder="Jml" value="1" style="flex:0.8; font-weight:700; text-align:center;">
         </div>
         <button class="btn-blue" onclick="tambahKeKeranjang()">Tambah ke Keranjang</button>
 
         <h3>Keranjang Belanja:</h3>
         <div id="keranjangList" class="cart">Belum ada barang.</div>
-        <h3 id="totalBelanja">Total: Rp 0</h3>
-        <button class="btn-green" id="btnBayar" onclick="bayarDanKirim()">Bayar & Simpan</button>
+        
+        <div class="cart" style="margin-top:-10px; border-style:solid;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h2 style="margin:0; color:var(--primary);">Total:</h2>
+                <h1 style="margin:0;" id="totalBelanja">Rp 0</h1>
+            </div>
+            <div style="display:flex; gap:10px; margin-top:10px; align-items:center;">
+                <input type="number" id="inputBayarUang" placeholder="Uang Tunai Diterima..." style="margin:0; font-size:16px; font-weight:700;">
+                <div style="flex:1; text-align:right;">
+                    <span style="font-size:11px; color:var(--text-muted)">Kembalian:</span><br>
+                    <strong style="font-size:16px; color:var(--red);" id="totalKembalian">Rp 0</strong>
+                </div>
+            </div>
+        </div>
+        
+        <button class="btn-green" id="btnBayar" onclick="bayarDanKirim()">Bayar & Cetak Struk ✓</button>
     </div>
 
     <div id="sec-gudang" class="section">
-        <button class="btn-orange" onclick="bukaScannerLive('stok')">📷 Scan Barcode Gudang</button>
+        <button class="btn-orange" onclick="bukaScannerLive('stok')">📷 Scan Gudang</button>
         <input type="text" id="barcodeStok" placeholder="Barcode Barang" onchange="cariDataGudang(this.value)">
         <input type="text" id="namaStok" placeholder="Nama Barang">
         <select id="kategoriStok">
@@ -103,34 +160,36 @@
             <option value="Rokok">Rokok</option><option value="Rumah Tangga">Rumah Tangga</option>
             <option value="Kebersihan">Kebersihan</option><option value="ATK">ATK</option><option value="Lain-lain">Lain-lain</option>
         </select>
-        <input type="number" id="jumlahStok" placeholder="Sisa Stok Saat Ini">
-        <input type="number" id="hargaBeli" placeholder="Harga Beli / Modal (Rp)">
-        <div style="display:flex; gap:10px;"><input type="number" id="hargaSatuan" placeholder="Harga Jual Ecer"><input type="number" id="hargaGrosir" placeholder="Harga Grosir"></div>
-        <div style="display:flex; gap:10px;"><input type="number" id="syaratGrosir" placeholder="Min. Beli Grosir"><input type="text" id="promo" placeholder="Promo (B2G1)"></div>
-        <button class="btn-green" id="btnSimpanStok" onclick="kirimStokBaru()">Simpan/Update Barang (Online)</button>
+        <div style="display:flex; gap:10px;"><input type="number" id="jumlahStok" placeholder="Stok Sekarang" style="flex:1.2; font-weight:700;"><input type="number" id="hargaBeli" placeholder="Harga Modal (Rp)" style="flex:1;"></div>
+        <div style="display:flex; gap:10px;"><input type="number" id="hargaSatuan" placeholder="Harga Ecer" style="flex:1;"><input type="number" id="hargaGrosir" placeholder="Harga Grosir" style="flex:1;"></div>
+        <div style="display:flex; gap:10px;"><input type="number" id="syaratGrosir" placeholder="Min Grosir" style="flex:1;"><input type="text" id="promo" placeholder="Promo (B2G1)" style="flex:1.2;"></div>
+        <button class="btn-green" id="btnSimpanStok" onclick="kirimStokBaru()">Simpan ke Gudang Online ✓</button>
     </div>
 
     <div id="sec-pengaturan" class="section">
-        <h3>⚙️ Pengaturan Toko</h3>
+        <h3>⚙️ Pengaturan Toko (White-Label)</h3>
         
         <div class="cart">
-            <h4 style="margin-top:0;">Profil Toko</h4>
-            <p style="font-size:12px; color:#555;">Atur nama toko yang akan tampil di struk pelanggan.</p>
-            <input type="text" id="inputNamaToko" placeholder="Masukkan Nama Toko...">
-            <button class="btn-blue" onclick="simpanNamaToko()">💾 Simpan Nama Toko</button>
+            <h4 style="margin-top:0;">1. Profil Toko (Pro)</h4>
+            <p style="font-size:11px; color:var(--text-muted); margin-bottom:5px;">Nama dan info ini akan mejeng gede-gede di struk pelanggan Anda.</p>
+            <input type="text" id="inputNamaToko" placeholder="Contoh: WARUNG BU AGUS">
+            <input type="text" id="inputAlamatToko" placeholder="Alamat Toko (Jl. Melati No. 5)">
+            <input type="text" id="inputHpToko" placeholder="Nomor WA/Hp Toko (08xxx)">
+            <input type="text" id="inputSloganToko" placeholder="Pesan Penutup (Terima Kasih!)">
+            <button class="btn-blue" onclick="simpanProfilToko()">💾 Simpan Profil Toko</button>
         </div>
 
         <div class="cart">
-            <h4 style="margin-top:0;">Koneksi Database</h4>
-            <p style="font-size:12px; color:#555;">Masukkan URL Web App dari Google Apps Script untuk menghubungkan aplikasi ini ke gudang Anda.</p>
-            <input type="text" id="inputApiUrl" placeholder="Paste URL API di sini...">
-            <button class="btn-green" onclick="simpanApiUrl()">🔗 Simpan & Hubungkan</button>
-            <div id="statusApiText" style="margin-top:10px; text-align:center; font-weight:bold; font-size:14px;"></div>
+            <h4 style="margin-top:0;">2. Koneksi Database Sheets</h4>
+            <p style="font-size:11px; color:var(--text-muted);">Paste URL Web App Apps Script dari pembeli Anda di sini bro.</p>
+            <input type="text" id="inputApiUrl" placeholder="Paste URL script.google.com di sini...">
+            <button class="btn-green" onclick="simpanApiUrl()">🔗 Hubungkan Database</button>
+            <div id="statusApiText" style="margin-top:10px; text-align:center; font-weight:700; font-size:13px;"></div>
         </div>
         
-        <div class="cart" style="border-color:#dc3545;">
-            <h4 style="margin-top:0; color:#dc3545;">Zona Berbahaya</h4>
-            <p style="font-size:12px; color:#555;">Hapus semua data lokal jika terjadi error atau ingin ganti toko.</p>
+        <div class="cart" style="border-color:var(--red); background:#fff5f5;">
+            <h4 style="margin-top:0; color:var(--red);">Reset Aplikasi</h4>
+            <p style="font-size:11px; color:#555;">Hapus semua data lokal. Gunakan jika ingin ganti token/toko.</p>
             <button class="btn-red" onclick="resetAplikasi()">🗑️ Reset Aplikasi</button>
         </div>
     </div>
@@ -138,33 +197,64 @@
 
 <div id="strukModal">
     <div id="strukContent">
-        <div class="struk-header" id="strukNamaTokoTampil">TOKO KITA</div>
-        <div id="strukTanggal" style="text-align:center; font-size:12px;"></div>
+        <div class="struk-header" id="st-nama">KASIR SAKTI</div>
+        <div class="struk-sub-header" id="st-alamat">Kustom Alamat di Menu Setting</div>
+        <div class="struk-sub-header" id="st-hp">HP: Kustom WA di Menu Setting</div>
+        
+        <div class="struk-garis"></div>
+        
+        <div style="display:flex; justify-content:space-between; font-size:11px;">
+            <span id="st-tgl">12/12/2023, 12:00</span>
+            <span id="st-trxid">TRX-XXXX</span>
+        </div>
+        
         <div class="struk-garis"></div>
         <div id="strukItems"></div>
         <div class="struk-garis"></div>
-        <div class="struk-total" id="strukTotal"></div>
-        <div class="no-print" style="margin-top:20px; display:flex; flex-direction:column; gap:10px;">
-            <button class="btn-blue" onclick="window.print()">🖨️ Cetak</button>
-            <button class="btn-green" onclick="bagikanStruk()">📱 Bagikan WA</button>
+        
+        <div class="struk-total">
+            <span>TOTAL:</span>
+            <span id="st-total" style="font-size:18px;">Rp 0</span>
+        </div>
+        
+        <div style="display:flex; justify-content:space-between; font-size:11px; color:#555; margin-top:5px;">
+            <span>Tunai:</span>
+            <span id="st-tunai">Rp 0</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:700;">
+            <span>Kembalian:</span>
+            <span id="st-kembalian">Rp 0</span>
+        </div>
+        
+        <div class="struk-garis"></div>
+        <div style="text-align:center; font-size:11px; margin-top:10px; font-style:italic;" id="st-slogan">Terima Kasih & Selamat Berbelanja!</div>
+        <div style="text-align:center; font-size:8px; color:var(--text-muted); margin-top:15px; border-top:1px solid #ccc; padding-top:3px;">Powered by OFFKASIR</div>
+
+        <div class="no-print">
+            <button class="btn-blue" onclick="window.print()">🖨️ Cetak Struk (Printer)</button>
+            <button class="btn-green" onclick="bagikanStruk()">📱 Bagikan WA Online</button>
             <button class="btn-red" onclick="document.getElementById('strukModal').style.display = 'none'">❌ Tutup</button>
         </div>
     </div>
 </div>
 
 <div class="navbar">
-    <div class="nav-item active" onclick="switchTab('sec-dashboard', this)">Dash</div>
-    <div class="nav-item" onclick="switchTab('sec-kasir', this)">Kasir</div>
-    <div class="nav-item" onclick="switchTab('sec-gudang', this)">Gudang</div>
-    <div class="nav-item" onclick="switchTab('sec-pengaturan', this)">Setting</div>
+    <div class="nav-item active" onclick="switchTab('sec-dashboard', this)"><span>📊</span>Dash</div>
+    <div class="nav-item" onclick="switchTab('sec-kasir', this)"><span>🛒</span>Kasir</div>
+    <div class="nav-item" onclick="switchTab('sec-gudang', this)"><span>📦</span>Gudang</div>
+    <div class="nav-item" onclick="switchTab('sec-pengaturan', this)"><span>⚙️</span>Setting</div>
 </div>
 
 <script>
-    // --- VARIABEL DINAMIS ---
+    // --- VARIABEL DINAMIS SAAS ---
     let API_URL = localStorage.getItem('KASIR_API_URL') || "";
-    let NAMA_TOKO = localStorage.getItem('KASIR_NAMA_TOKO') || "TOKO KITA";
+    let NAMA_TOKO = localStorage.getItem('KASIR_PROFIL_NAMA') || "OFFKASIR";
+    let ALAMAT_TOKO = localStorage.getItem('KASIR_PROFIL_ALAMAT') || "";
+    let HP_TOKO = localStorage.getItem('KASIR_PROFIL_HP') || "";
+    let SLOGAN_TOKO = localStorage.getItem('KASIR_PROFIL_SLOGAN') || "Terima Kasih Atas Kunjungan Anda!";
     
     let keranjang = [];
+    let grandTotalKeranjang = 0;
     let katalogOnline = JSON.parse(localStorage.getItem('katalogLokal')) || []; 
     let antreanTrx = JSON.parse(localStorage.getItem('antreanTrx')) || [];
     let targetScan = '';
@@ -172,12 +262,12 @@
     let html5QrcodeScanner = null;
 
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js').then(() => console.log('PWA Siap!')).catch(err => console.log(err));
+        navigator.serviceWorker.register('sw.js').then(() => console.log('PWA OFFKASIR Siap!')).catch(err => console.log(err));
     }
 
     window.onload = function() { 
         document.getElementById('inputApiUrl').value = API_URL;
-        document.getElementById('inputNamaToko').value = NAMA_TOKO; // Munculin nama toko di inputan
+        loadProfilDiSetting();
         
         cekStatusApi();
         updateStatusSinyal(); 
@@ -190,14 +280,29 @@
     window.addEventListener('online',  updateStatusSinyal);
     window.addEventListener('offline', updateStatusSinyal);
 
-    // --- FUNGSI SIMPAN NAMA TOKO BARU ---
-    function simpanNamaToko() {
-        let namaBaru = document.getElementById('inputNamaToko').value.trim();
-        if(!namaBaru) return alert("Nama toko ga boleh kosong bro!");
+    // --- FITUR BARU: SIMPAN PROFIL TOKO KUSTO ---
+    function loadProfilDiSetting() {
+        document.getElementById('inputNamaToko').value = localStorage.getItem('KASIR_PROFIL_NAMA') || "";
+        document.getElementById('inputAlamatToko').value = localStorage.getItem('KASIR_PROFIL_ALAMAT') || "";
+        document.getElementById('inputHpToko').value = localStorage.getItem('KASIR_PROFIL_HP') || "";
+        document.getElementById('inputSloganToko').value = localStorage.getItem('KASIR_PROFIL_SLOGAN') || "Terima Kasih Atas Kunjungan Anda!";
+    }
+
+    function simpanProfilToko() {
+        let n = document.getElementById('inputNamaToko').value.trim();
+        let a = document.getElementById('inputAlamatToko').value.trim();
+        let h = document.getElementById('inputHpToko').value.trim();
+        let s = document.getElementById('inputSloganToko').value.trim();
         
-        localStorage.setItem('KASIR_NAMA_TOKO', namaBaru);
-        NAMA_TOKO = namaBaru;
-        alert("Sip! Nama toko berhasil diupdate jadi: " + NAMA_TOKO);
+        if(!n) return alert("Peringatan: Nama Toko wajib diisi bro!");
+        
+        localStorage.setItem('KASIR_PROFIL_NAMA', n);
+        localStorage.setItem('KASIR_PROFIL_ALAMAT', a);
+        localStorage.setItem('KASIR_PROFIL_HP', h);
+        localStorage.setItem('KASIR_PROFIL_SLOGAN', s);
+        
+        NAMA_TOKO = n; ALAMAT_TOKO = a; HP_TOKO = h; SLOGAN_TOKO = s;
+        alert("Sip! Profil Toko ("+NAMA_TOKO+") berhasil diupdate.");
     }
 
     function cekStatusApi() {
@@ -205,27 +310,27 @@
         let statusText = document.getElementById('statusApiText');
         if(!API_URL) {
             bannerApi.style.display = 'block';
-            statusText.innerHTML = "<span style='color:red;'>Terputus (API Kosong)</span>";
+            statusText.innerHTML = "<span style='color:var(--red);'>Status: Belum Terhubung (API Kosong)</span>";
         } else {
             bannerApi.style.display = 'none';
-            statusText.innerHTML = "<span style='color:green;'>Tersambung ✓</span>";
+            statusText.innerHTML = "<span style='color:var(--green);'>Status: Database Terhubung ✓</span>";
         }
     }
 
     function simpanApiUrl() {
         let urlBaru = document.getElementById('inputApiUrl').value.trim();
-        if(!urlBaru) return alert("Link API tidak boleh kosong!");
-        if(!urlBaru.includes("script.google.com/macros/s/")) return alert("Link API tidak valid. Pastikan dari Google Apps Script.");
+        if(!urlBaru) return alert("Error: Link API ga boleh kosong bro!");
+        if(!urlBaru.includes("script.google.com/macros/s/")) return alert("Error: Link API ga valid. Harus dari Google Script.");
         
         localStorage.setItem('KASIR_API_URL', urlBaru);
         API_URL = urlBaru;
         cekStatusApi();
-        alert("Berhasil disimpan! Aplikasi akan mencoba sinkronisasi...");
+        alert("Berhasil disimpan! Aplikasi nyoba narik data gudang dulu...");
         refreshSemua();
     }
 
     function resetAplikasi() {
-        if(confirm("YAKIN MAU RESET? Semua data lokal dan antrean transaksi yang belum terkirim akan HILANG.")) {
+        if(confirm("YAKIN MAU RESET? Semua data profil, koneksi gudang, dan transaksi tertunda akan HILANG seumur hidup!")) {
             localStorage.clear();
             location.reload();
         }
@@ -255,19 +360,19 @@
     function refreshSemua() {
         if(!API_URL) return;
         if(navigator.onLine) { refreshKatalog(); tarikLaporanCuan(); }
-        else { document.getElementById('wadahRekap').innerHTML = "<span style='color:red'>Mode Offline.</span>"; }
+        else { document.getElementById('wadahRekap').innerHTML = "<span style='color:red'>Offline.</span>"; }
     }
 
     function renderStokGudang() {
         document.getElementById('jumlahKatalog').innerText = katalogOnline.length;
         let html = '<table class="tabel-rekap"><tr><th>Barang</th><th>Kategori</th><th>Stok</th></tr>';
         if(katalogOnline.length === 0) {
-            html += '<tr><td colspan="3" style="text-align:center;">Data kosong</td></tr>';
+            html += '<tr><td colspan="3" style="text-align:center;">Gudang Kosong bro</td></tr>';
         } else {
             let katalogUrut = [...katalogOnline].sort((a, b) => parseInt(a.sisaStok) - parseInt(b.sisaStok));
             katalogUrut.forEach(b => {
                 let sisa = parseInt(b.sisaStok);
-                let stylePeringatan = sisa <= 5 ? 'color:red; font-weight:bold;' : 'color:green; font-weight:bold;';
+                let stylePeringatan = sisa <= 5 ? 'color:var(--red); font-weight:bold;' : 'color:var(--green);';
                 html += `<tr><td>${b.namaBarang}</td><td>${b.kategori}</td><td style="${stylePeringatan}">${sisa}</td></tr>`;
             });
         }
@@ -278,7 +383,7 @@
     function refreshKatalog() {
         if(!API_URL) return;
         let btn = document.getElementById('btnRefresh');
-        if(btn) btn.innerText = "Sinking...";
+        if(btn) btn.innerText = "Narik Data... ⏳";
         
         fetch(API_URL + "?action=katalog")
             .then(res => res.json())
@@ -286,33 +391,33 @@
                 katalogOnline = data;
                 localStorage.setItem('katalogLokal', JSON.stringify(data)); 
                 renderStokGudang(); 
-                if(btn) btn.innerText = "🔄 Sinkron Data Online";
+                if(btn) btn.innerText = "🔄 Sinkron Data Gudang";
             }).catch(err => {
-                if(btn) btn.innerText = "🔄 Sinkron Data Online";
+                if(btn) btn.innerText = "🔄 Sinkron Data Gudang";
             });
     }
 
     function tarikLaporanCuan() {
         if(!API_URL) return;
-        document.getElementById('wadahRekap').innerHTML = "Menghitung...";
+        document.getElementById('wadahRekap').innerHTML = "Hitung Cuan...";
         fetch(API_URL + "?action=laporan")
             .then(res => res.json())
             .then(res => {
                 if(res.status === "success") {
-                    let html = '<table class="tabel-rekap"><tr><th>Kategori</th><th>Trx</th><th>Omset</th><th>Laba</th></tr>';
+                    // UPDATE KARTU DASHBOARD MEWAH
+                    document.getElementById('valOmset').innerText = `Rp ${res.grandTotalOmset.toLocaleString('id-ID')}`;
+                    document.getElementById('valLaba').innerText = `Rp ${res.grandTotalLaba.toLocaleString('id-ID')}`;
+
+                    let html = '<table class="tabel-rekap"><tr><th>Kategori</th><th>Omset</th><th>Laba</th></tr>';
                     res.data.forEach(item => {
-                        html += `<tr><td>${item.kategori}</td><td>${item.jumlahTransaksi}x</td>
-                                 <td style="color:#007bff">Rp ${item.totalOmset.toLocaleString('id-ID')}</td>
-                                 <td style="color:green">Rp ${item.totalLaba.toLocaleString('id-ID')}</td></tr>`;
+                        html += `<tr><td>${item.kategori} (${item.jumlahTransaksi}x)</td>
+                                 <td style="color:var(--primary)">Rp ${item.totalOmset.toLocaleString('id-ID')}</td>
+                                 <td style="color:var(--green); font-weight:700;">Rp ${item.totalLaba.toLocaleString('id-ID')}</td></tr>`;
                     });
                     html += '</table>';
-                    let htmlTotal = `<div style="display:flex; justify-content:space-around; margin-top:10px; text-align:center; background:#f4f4f9; padding:10px; border-radius:8px;">
-                            <div><span style="color:#555; font-size:13px;">Omset:</span><br><strong style="color:#007bff;">Rp ${res.grandTotalOmset.toLocaleString('id-ID')}</strong></div>
-                            <div><span style="color:#555; font-size:13px;">Laba:</span><br><strong style="color:#28a745;">Rp ${res.grandTotalLaba.toLocaleString('id-ID')}</strong></div></div>`;
                     document.getElementById('wadahRekap').innerHTML = html;
-                    document.getElementById('grandTotalLaba').innerHTML = htmlTotal;
                 }
-            }).catch(err => document.getElementById('wadahRekap').innerHTML = "Gagal narik laporan.");
+            }).catch(err => document.getElementById('wadahRekap').innerHTML = "Error narik laporan.");
     }
 
     function syncDataTertunda() {
@@ -324,7 +429,7 @@
             if(res.status === "success") {
                 antreanTrx = []; 
                 localStorage.setItem('antreanTrx', JSON.stringify(antreanTrx));
-                alert("Sinyal kembali! Semua transaksi offline berhasil dikirim.");
+                alert("Sinyal kembali! "+antreanTrx.length+" utang transaksi tertunda sukses dikirim ke gudang pusat.");
                 updateStatusSinyal();
             }
         });
@@ -343,17 +448,25 @@
                     document.getElementById('barcode').value = decodedText;
                     let barang = katalogOnline.find(b => b.barcode === decodedText);
                     if(barang) { document.getElementById('namaBarang').value = barang.namaBarang; document.getElementById('hargaBarang').value = barang.hargaSatuan; } 
-                    else { alert("Barang belum terdaftar!"); document.getElementById('barcode').value = ''; }
+                    else { alert("Peringatan: Barang belum terdaftar di Gudang!"); document.getElementById('barcode').value = ''; }
                 }
             },
             (errorMessage) => { }
-        ).catch(err => { alert("Gagal akses kamera."); tutupScanner(); });
+        ).catch(err => { tutupScanner(); });
     }
 
     function tutupScanner() {
         if (html5QrcodeScanner) { html5QrcodeScanner.stop().then(() => { document.getElementById('scannerModal').style.display = 'none'; }).catch(err => console.log(err)); } 
         else { document.getElementById('scannerModal').style.display = 'none'; }
     }
+
+    // --- FITUR BARU: HITUNG KEMBALIAN DI KASIR ---
+    document.getElementById('inputBayarUang').addEventListener('input', function() {
+        let uangTunai = parseInt(this.value) || 0;
+        let kembalian = uangTunai - grandTotalKeranjang;
+        if(kembalian < 0) kembalian = 0;
+        document.getElementById('totalKembalian').innerText = `Rp ${kembalian.toLocaleString('id-ID')}`;
+    });
 
     document.getElementById('barcode').addEventListener('input', function() {
         let barang = katalogOnline.find(b => b.barcode === this.value);
@@ -381,31 +494,31 @@
     }
 
     function kirimStokBaru() {
-        if(!API_URL) return alert("Peringatan: API belum diatur!");
-        if(!navigator.onLine) return alert("Gagal! Update gudang harus online.");
+        if(!API_URL) return alert("Peringatan: Token API Database belum diatur di menu Setting!");
+        if(!navigator.onLine) return alert("Gagal! Update gudang ga bisa offline bro.");
         let dataStok = {
             barcode: document.getElementById('barcodeStok').value, namaBarang: document.getElementById('namaStok').value,
             kategori: document.getElementById('kategoriStok').value, sisaStok: document.getElementById('jumlahStok').value,
             hargaBeli: document.getElementById('hargaBeli').value || 0, hargaSatuan: document.getElementById('hargaSatuan').value || 0,
             hargaGrosir: document.getElementById('hargaGrosir').value || 0, syaratGrosir: document.getElementById('syaratGrosir').value || 0, promo: document.getElementById('promo').value || ""
         };
-        if(!dataStok.barcode || !dataStok.namaBarang) return alert("Barcode & Nama wajib isi!");
+        if(!dataStok.barcode || !dataStok.namaBarang) return alert("Error: Barcode & Nama wajib isi!");
         
-        let btn = document.getElementById('btnSimpanStok'); btn.innerText = "Mengirim...";
+        let btn = document.getElementById('btnSimpanStok'); btn.innerText = "Mengirim..."; btn.disabled = true;
         fetch(API_URL, {
             method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ action: 'stok', data: dataStok })
         }).then(res => res.json()).then(res => {
-            alert(res.msg); btn.innerText = "Simpan/Update Barang (Online)";
+            alert(res.msg); btn.innerText = "Simpan ke Gudang Online ✓"; btn.disabled = false;
             document.querySelectorAll('#sec-gudang input').forEach(inp => inp.value = ''); document.getElementById('kategoriStok').selectedIndex = 0; 
             refreshKatalog();
-        }).catch(err => btn.innerText = "Simpan/Update Barang (Online)");
+        }).catch(err => { alert("Error kirim data."); btn.innerText = "Simpan ke Gudang Online ✓"; btn.disabled = false;});
     }
 
     function tambahKeKeranjang(barangOtomatis = null) {
         let barcode = document.getElementById('barcode').value; let jumlah = parseInt(document.getElementById('jumlah').value) || 1;
         let barang = barangOtomatis || katalogOnline.find(b => b.barcode === barcode);
-        if(!barang) return alert("Barang belum terdaftar!");
+        if(!barang) return alert("Barang belum terdaftar di gudang lokal!");
 
         let hargaJualDipakai = parseInt(barang.hargaSatuan); let keterangan = "";
         let minGrosir = parseInt(barang.syaratGrosir);
@@ -420,7 +533,7 @@
             let matchPromo = barang.promo.trim().toUpperCase().match(/^B(\d+)G(\d+)$/);
             if (matchPromo) {
                 let bonusPcs = Math.floor(jumlah / parseInt(matchPromo[1])) * parseInt(matchPromo[2]); 
-                if (bonusPcs > 0) keranjang.push({ barcode: barang.barcode, namaBarang: `[BONUS] ${barang.namaBarang}`, kategori: barang.kategori, jumlah: bonusPcs, totalHarga: 0, totalModal: modalSatuan * bonusPcs, labaBersih: -(modalSatuan * bonusPcs), keterangan: `Promo` });
+                if (bonusPcs > 0) keranjang.push({ barcode: barang.barcode, namaBarang: `[BONUS Promo] ${barang.namaBarang}`, kategori: barang.kategori, jumlah: bonusPcs, totalHarga: 0, totalModal: modalSatuan * bonusPcs, labaBersih: -(modalSatuan * bonusPcs), keterangan: `Promo` });
             }
         }
         updateTampilanKeranjang();
@@ -428,21 +541,31 @@
     }
 
     function updateTampilanKeranjang() {
-        let html = ''; let grandTotal = 0;
+        let html = ''; grandTotalKeranjang = 0;
         keranjang.forEach((item) => {
-            html += `<p style="margin:5px 0;">[+] ${item.namaBarang} (x${item.jumlah}) - Rp ${item.totalHarga}</p>`; grandTotal += item.totalHarga;
+            html += `<p style="margin:4px 0; border-bottom:1px solid #f1f5f9; padding-bottom:4px;">[+] <strong>${item.namaBarang}</strong> (x${item.jumlah}) - Rp ${item.totalHarga.toLocaleString('id-ID')}</p>`; grandTotalKeranjang += item.totalHarga;
         });
-        document.getElementById('keranjangList').innerHTML = html || 'Belum ada barang.'; document.getElementById('totalBelanja').innerText = `Total: Rp ${grandTotal}`;
+        document.getElementById('keranjangList').innerHTML = html || 'Masukan barang dulu bro.'; 
+        document.getElementById('totalBelanja').innerText = `Rp ${grandTotalKeranjang.toLocaleString('id-ID')}`;
+        
+        // Reset input bayar kalau keranjang nambah
+        document.getElementById('inputBayarUang').value = '';
+        document.getElementById('totalKembalian').innerText = "Rp 0";
     }
 
     function bayarDanKirim() {
-        if(!API_URL) return alert("Peringatan: API Toko belum diatur di menu Setting!");
+        if(!API_URL) return alert("Waduh bro, API Gudang belum diatur di menu Setting!");
         if(keranjang.length === 0) return alert("Keranjang kosong!");
-        let btn = document.getElementById('btnBayar'); btn.innerText = "Memproses...";
+        
+        let uangTunai = parseInt(document.getElementById('inputBayarUang').value) || 0;
+        if(uangTunai < grandTotalKeranjang) return alert("Error: Uang tunai kurang dari total belanja!");
+
+        let btn = document.getElementById('btnBayar'); btn.innerText = "Memproses..."; btn.disabled = true;
         
         let idTrx = "TRX-" + Math.floor(Date.now() / 1000); let tgl = new Date().toLocaleString('id-ID');
         let dataKirim = keranjang.map(item => ({ id: idTrx, tanggal: tgl, ...item }));
 
+        // Ngurangin stok LOKAL sementara
         dataKirim.forEach(trx => {
             let brgIndex = katalogOnline.findIndex(b => b.barcode === trx.barcode);
             if(brgIndex !== -1) { katalogOnline[brgIndex].sisaStok -= trx.jumlah; }
@@ -450,43 +573,71 @@
         localStorage.setItem('katalogLokal', JSON.stringify(katalogOnline));
         renderStokGudang(); 
 
+        // PENYIMPANAN OFFLINE / ONLINE
         if(!navigator.onLine) {
             antreanTrx.push(...dataKirim); localStorage.setItem('antreanTrx', JSON.stringify(antreanTrx));
-            tampilkanStruk(tgl); updateStatusSinyal(); btn.innerText = "Bayar & Simpan"; return;
+            tampilkanStrukUltimate(tgl, idTrx, uangTunai);
+            updateStatusSinyal();
+            btn.innerText = "Bayar & Cetak Struk ✓"; btn.disabled = false;
+            return;
         }
 
         fetch(API_URL, {
             method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ action: 'transaksi', data: dataKirim })
         }).then(res => res.json()).then(res => {
-            tampilkanStruk(tgl); btn.innerText = "Bayar & Simpan"; refreshSemua();
+            tampilkanStrukUltimate(tgl, idTrx, uangTunai); btn.innerText = "Bayar & Cetak Struk ✓"; btn.disabled = false; refreshSemua();
         }).catch(err => {
             antreanTrx.push(...dataKirim); localStorage.setItem('antreanTrx', JSON.stringify(antreanTrx));
-            tampilkanStruk(tgl); updateStatusSinyal(); btn.innerText = "Bayar & Simpan";
+            tampilkanStrukUltimate(tgl, idTrx, uangTunai); updateStatusSinyal(); btn.innerText = "Bayar & Cetak Struk ✓"; btn.disabled = false;
         });
     }
 
-    function tampilkanStruk(tgl) {
-        let strukHtml = ''; let grandTotalStruk = 0;
+    // --- FITUR BARU: STRUK PRO DENGAN NAMA TOKO & KEMBALIAN KUSTO ---
+    function tampilkanStrukUltimate(tgl, idTrx, uangTunai) {
+        let strukHtml = ''; let gTotalStruk = 0;
         
-        // PAKE NAMA TOKO DINAMIS BUAT DI WA
-        teksStrukOnline = `*=== STRUK BELANJA ===*\n*${NAMA_TOKO}*\nTanggal: ` + tgl + '\n\n';
+        // PAKE NAMA & INFO TOKO DINAMIS UNTUK WA
+        teksStrukOnline = `*=== STRUK BELANJA ===*\n*${NAMA_TOKO}*\n${ALAMAT_TOKO}\nHP: ${HP_TOKO}\n\nTgl: ${tgl}\nNo: ${idTrx}\n${'-'.repeat(25)}\n\n`;
         
         keranjang.forEach(item => {
-            strukHtml += `<div class="struk-item"><span>${item.namaBarang} (x${item.jumlah})</span><span>Rp ${item.totalHarga}</span></div>`;
-            grandTotalStruk += item.totalHarga; teksStrukOnline += `${item.namaBarang} (x${item.jumlah}) : Rp ${item.totalHarga}\n`;
+            strukHtml += `<div class="struk-item">
+                            <div class="struk-item-info">
+                                <span>${item.namaBarang}</span><br>
+                                <span style="color:#555; font-size:11px;">x${item.jumlah}</span>
+                            </div>
+                            <span>Rp ${item.totalHarga.toLocaleString('id-ID')}</span>
+                          </div>`;
+            gTotalStruk += item.totalHarga; 
+            teksStrukOnline += `${item.namaBarang} (x${item.jumlah}) : Rp ${item.totalHarga.toLocaleString('id-ID')}\n`;
         });
         
-        // UPDATE NAMA TOKO DI POP-UP STRUK HTML
-        document.getElementById('strukNamaTokoTampil').innerText = NAMA_TOKO;
+        // UPDATE INFO PROFIL DI POP-UP STRUK HTML
+        document.getElementById('st-nama').innerText = NAMA_TOKO;
+        document.getElementById('st-alamat').innerText = ALAMAT_TOKO;
+        document.getElementById('st-hp').innerText = `HP: ${HP_TOKO}`;
+        document.getElementById('st-slogan').innerText = SLOGAN_TOKO;
         
-        document.getElementById('strukTanggal').innerText = tgl; document.getElementById('strukItems').innerHTML = strukHtml; document.getElementById('strukTotal').innerText = `TOTAL: Rp ${grandTotalStruk}`;
-        teksStrukOnline += `\n*TOTAL: Rp ${grandTotalStruk}*\nTerima Kasih!`;
+        // INFO TRANSAKSI
+        document.getElementById('st-tgl').innerText = tgl;
+        document.getElementById('st-trxid').innerText = `No: ${idTrx}`;
+        
+        // TOTAL & PEMBAYARAN
+        document.getElementById('st-total').innerText = `Rp ${gTotalStruk.toLocaleString('id-ID')}`;
+        document.getElementById('st-tunai').innerText = `Rp ${uangTunai.toLocaleString('id-ID')}`;
+        document.getElementById('st-kembalian').innerText = `Rp ${(uangTunai - gTotalStruk).toLocaleString('id-ID')}`;
+        
+        // TEKS AKHIR BUAT WA
+        teksStrukOnline += `\n${'-'.repeat(25)}\n*TOTAL: Rp ${gTotalStruk.toLocaleString('id-ID')}*\nTunai: Rp ${uangTunai.toLocaleString('id-ID')}\nKembalian: Rp ${(uangTunai - gTotalStruk).toLocaleString('id-ID')}\n\n${SLOGAN_TOKO}\n_Powered by OFFKASIR_`;
+        
+        // Reset Kasir abis struk muncul
+        document.getElementById('inputBayarUang').value = '';
+        document.getElementById('totalKembalian').innerText = "Rp 0";
         document.getElementById('strukModal').style.display = 'flex';
         keranjang = []; updateTampilanKeranjang();
     }
 
-    function bagikanStruk() { if (navigator.share) { navigator.share({ title: 'Struk Belanja', text: teksStrukOnline }); } }
+    function bagikanStruk() { if (navigator.share) { navigator.share({ title: `Struk Belanja ${NAMA_TOKO}`, text: teksStrukOnline }); } }
 </script>
 </body>
 </html>
