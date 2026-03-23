@@ -166,7 +166,7 @@
 
         <div style="display:flex; gap:10px;"><input type="number" id="jumlahStok" placeholder="Stok Sekarang" style="flex:1.2; font-weight:700;"><input type="number" id="hargaBeli" placeholder="Harga Modal (Rp)" style="flex:1;"></div>
         <div style="display:flex; gap:10px;"><input type="number" id="hargaSatuan" placeholder="Harga Ecer" style="flex:1;"><input type="number" id="hargaGrosir" placeholder="Harga Grosir" style="flex:1;"></div>
-        <div style="display:flex; gap:10px;"><input type="number" id="syaratGrosir" placeholder="Min Grosir" style="flex:1;"><input type="text" id="promo" placeholder="Promo (B2G1)" style="flex:1.2;"></div>
+        <div style="display:flex; gap:10px;"><input type="number" id="syaratGrosir" placeholder="Min Grosir" style="flex:1;"><input type="text" id="promo" placeholder="Promo (B2G1 atau 3=2000)" style="flex:1.2;"></div>
         <button class="btn-green" id="btnSimpanStok" onclick="kirimStokBaru()">Simpan ke Gudang Online ✓</button>
     </div>
 
@@ -260,7 +260,6 @@
     let HP_TOKO = localStorage.getItem('KASIR_PROFIL_HP') || "";
     let SLOGAN_TOKO = localStorage.getItem('KASIR_PROFIL_SLOGAN') || "Terima Kasih Atas Kunjungan Anda!";
     
-    // VARIABEL BARU KATEGORI TOKO
     let KATEGORI_TOKO = localStorage.getItem('KASIR_KATEGORI_TOKO') || "Bahan Makanan, Minuman, Rokok, Rumah Tangga, Kebersihan, ATK, Lain-lain";
     
     let keranjang = [];
@@ -282,7 +281,7 @@
         document.getElementById('inputKategoriToko').value = KATEGORI_TOKO;
         
         loadProfilDiSetting();
-        renderDropdownKategori(); // Panggil fungsi render kategori
+        renderDropdownKategori();
         cekStatusApi();
         updateStatusSinyal(); 
         if(API_URL) { refreshSemua(); }
@@ -293,7 +292,6 @@
     window.addEventListener('online',  updateStatusSinyal);
     window.addEventListener('offline', updateStatusSinyal);
 
-    // --- FUNGSI BARU: RENDER DROPDOWN KATEGORI & SIMPAN ---
     function renderDropdownKategori() {
         let select = document.getElementById('kategoriStok');
         let html = '<option value="" disabled selected>-- Pilih Kategori --</option>';
@@ -301,9 +299,7 @@
         
         arrKategori.forEach(k => {
             let namaK = k.trim();
-            if(namaK) {
-                html += `<option value="${namaK}">${namaK}</option>`;
-            }
+            if(namaK) { html += `<option value="${namaK}">${namaK}</option>`; }
         });
         select.innerHTML = html;
     }
@@ -314,7 +310,7 @@
         
         localStorage.setItem('KASIR_KATEGORI_TOKO', k);
         KATEGORI_TOKO = k;
-        renderDropdownKategori(); // Langsung update dropdownnya
+        renderDropdownKategori(); 
         alert("Sip! Kategori berhasil diupdate.");
     }
 
@@ -488,6 +484,7 @@
         if(barang) { document.getElementById('namaBarang').value = barang.namaBarang; document.getElementById('hargaBarang').value = barang.hargaSatuan; } 
         else { document.getElementById('namaBarang').value = ''; document.getElementById('hargaBarang').value = ''; }
     });
+    
     document.getElementById('barcode').addEventListener('keypress', function(e) {
         if (e.key === 'Enter') { e.preventDefault(); let barang = katalogOnline.find(b => b.barcode === this.value);
             if(barang) tambahKeKeranjang(barang); else { alert("Barang belum terdaftar!"); this.value = ''; document.getElementById('namaBarang').value = ''; document.getElementById('hargaBarang').value = '';}
@@ -528,19 +525,51 @@
         let barang = barangOtomatis || katalogOnline.find(b => b.barcode === barcode);
         if(!barang) return alert("Barang belum terdaftar!");
 
-        let hargaJualDipakai = parseInt(barang.hargaSatuan); let keterangan = ""; let minGrosir = parseInt(barang.syaratGrosir);
-        if (minGrosir > 0 && jumlah >= minGrosir) { hargaJualDipakai = parseInt(barang.hargaGrosir); keterangan = "Harga Grosir"; }
+        let modalSatuan = parseInt(barang.hargaBeli); 
+        let totalModalBarang = modalSatuan * jumlah;
+        let totalHargaBarang = 0;
+        let keterangan = "";
 
-        let modalSatuan = parseInt(barang.hargaBeli); let totalHargaBarang = hargaJualDipakai * jumlah; let totalModalBarang = modalSatuan * jumlah;
+        // 1. CEK LOGIKA PROMO BUNDLING (Contoh isi promo di Gudang: "3=2000")
+        let isBundling = false;
+        if (barang.promo && barang.promo.includes('=')) {
+            let bagian = barang.promo.split('=');
+            let qtyBundle = parseInt(bagian[0]);
+            let hargaBundle = parseInt(bagian[1]);
 
+            if (jumlah >= qtyBundle) {
+                let dapetBerapaPaket = Math.floor(jumlah / qtyBundle); 
+                let sisaBeliEcer = jumlah % qtyBundle; 
+                
+                totalHargaBarang = (dapetBerapaPaket * hargaBundle) + (sisaBeliEcer * parseInt(barang.hargaSatuan));
+                keterangan = "Promo Bundling";
+                isBundling = true;
+            }
+        }
+
+        // 2. KALAU GA MASUK BUNDLING, Cek Harga Grosir / Satuan Biasa
+        if (!isBundling) {
+            let minGrosir = parseInt(barang.syaratGrosir);
+            if (minGrosir > 0 && jumlah >= minGrosir) { 
+                totalHargaBarang = parseInt(barang.hargaGrosir) * jumlah;
+                keterangan = "Harga Grosir"; 
+            } else {
+                totalHargaBarang = parseInt(barang.hargaSatuan) * jumlah;
+            }
+        }
+
+        // Catat barang utama ke keranjang
         keranjang.push({ barcode: barang.barcode, namaBarang: barang.namaBarang, kategori: barang.kategori, jumlah: jumlah, totalHarga: totalHargaBarang, totalModal: totalModalBarang, labaBersih: totalHargaBarang - totalModalBarang, keterangan: keterangan });
-        if (barang.promo) {
+        
+        // 3. CEK LOGIKA PROMO GRATISAN LAMA (Contoh isi promo di Gudang: "B2G1")
+        if (barang.promo && !barang.promo.includes('=')) {
             let matchPromo = barang.promo.trim().toUpperCase().match(/^B(\d+)G(\d+)$/);
             if (matchPromo) {
                 let bonusPcs = Math.floor(jumlah / parseInt(matchPromo[1])) * parseInt(matchPromo[2]); 
                 if (bonusPcs > 0) keranjang.push({ barcode: barang.barcode, namaBarang: `[BONUS] ${barang.namaBarang}`, kategori: barang.kategori, jumlah: bonusPcs, totalHarga: 0, totalModal: modalSatuan * bonusPcs, labaBersih: -(modalSatuan * bonusPcs), keterangan: `Promo` });
             }
         }
+        
         updateTampilanKeranjang(); document.getElementById('barcode').value = ''; document.getElementById('namaBarang').value = ''; document.getElementById('hargaBarang').value = ''; document.getElementById('jumlah').value = '1'; document.getElementById('barcode').focus();
     }
 
